@@ -1,5 +1,16 @@
 # Wick's Forms and Things - Changelog
 
+## Unreleased
+
+- The resource bars are coloured by their resource again: blue for
+  mana, yellow for energy, red for rage, from the client's own power
+  colours where it has them. They were palette tokens, decided when a
+  blue mana bar on a green UI looked wrong, and per-class themes ended
+  that: on a druid the accent is orange, so the top bar was orange for
+  rage and orange for the theme with no way to tell which, and the one
+  underneath was a brown smear. The chrome around them is still brand;
+  it is the fill that has a job.
+
 ## 0.9.0
 
 One version across the suite for the Forever beta. Every addon carried a

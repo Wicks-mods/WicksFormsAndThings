@@ -206,28 +206,47 @@ local function barMargin()  return (WicksTravelFormDB and WicksTravelFormDB.barM
 local function fbarH()      return (WicksTravelFormDB and WicksTravelFormDB.barFloatSegH) or BAR_H_DEFAULT      end
 local function fbarGap()    return (WicksTravelFormDB and WicksTravelFormDB.barFloatGap)  or BAR_GAP_DEFAULT    end
 
--- Two bars, two palette tokens. The power colours that were here are
--- not in the palette and cannot be themed, which is the whole of the
--- complaint: a blue mana bar on a green UI. All the colour was doing
--- was telling the two bars apart, and the accent against the border
--- purple does that while still answering to a theme.
-local C_PRIMARY = C.fel
-local C_MANA    = C.border
-
 -- Power type constants (UnitPowerType returns these)
 local POWER_MANA   = 0
 local POWER_RAGE   = 1
 local POWER_ENERGY = 3
 
+-- A bar is coloured by its resource. These were palette tokens for a
+-- while, the accent on top and the border purple underneath, decided
+-- when a blue mana bar on a green UI looked wrong. That held while the
+-- accent was always fel green. Per-class themes ended it: on a druid
+-- the accent is orange, so the top bar was orange for rage and orange
+-- for the theme with no way to tell which.
+--
+-- The client's own colours where it has them, since that is what the
+-- rest of the UI is using, and ours where it does not. Not palette
+-- tokens, so Chrome never registers them and a theme leaves them be,
+-- which is the point: mana is blue under every theme.
+local FALLBACK_POWER = {
+    [POWER_MANA]   = { 0.25, 0.45, 0.95, 1 },
+    [POWER_RAGE]   = { 0.85, 0.20, 0.20, 1 },
+    [POWER_ENERGY] = { 0.95, 0.88, 0.25, 1 },
+}
+local POWER_TOKEN = { [POWER_MANA] = "MANA", [POWER_RAGE] = "RAGE",
+                      [POWER_ENERGY] = "ENERGY" }
+
+local function powerColour(powerType)
+    local pbc = rawget(_G, "PowerBarColor")
+    local c = pbc and POWER_TOKEN[powerType] and pbc[POWER_TOKEN[powerType]]
+    if c and type(c.r) == "number" then return { c.r, c.g, c.b, 1 } end
+    return FALLBACK_POWER[powerType] or FALLBACK_POWER[POWER_MANA]
+end
+
 -- =====================================================================
 -- Shared draw logic — operates on whichever bar frame is passed in.
 -- Each bar frame has .priTrack, .priFill, .manaTrack, .manaFill children.
 -- =====================================================================
-local function makeBar(f, colour)
+local function makeBar(f, powerType)
     local sb = CreateFrame("StatusBar", nil, f)
     -- A plain colour rather than an art path: a texture file that
     -- resolves to nothing leaves the bar looking permanently empty.
-    local fill = Chrome:Texture(sb, "ARTWORK", colour)
+    local fill = Chrome:Texture(sb, "ARTWORK", powerColour(powerType))
+    sb.fill = fill
     sb:SetStatusBarTexture(fill)
     sb:SetMinMaxValues(0, 1)
     sb:SetValue(0)
@@ -238,8 +257,8 @@ end
 local function MakeBarChildren(f)
     -- StatusBars, not textures: SetMinMaxValues and SetValue accept secret
     -- values, which is what the player's power is on Forever.
-    f.priTrack  = makeBar(f, C_PRIMARY)
-    f.manaTrack = makeBar(f, C_MANA)
+    f.priTrack  = makeBar(f, POWER_MANA)
+    f.manaTrack = makeBar(f, POWER_MANA)
     f.priFill   = f.priTrack
     f.manaFill  = f.manaTrack
 end
@@ -260,13 +279,18 @@ local function LayoutBarChildren(f, w, h, g, pad)
 
 end
 
-local function setBar(sb, cur, max, alpha)
+local function setBar(sb, cur, max, alpha, powerType)
     -- Pass values straight through; never compare or divide them.
     pcall(sb.SetMinMaxValues, sb, 0, max)
     pcall(sb.SetValue, sb, cur)
+    -- The top bar is rage in bear, energy in cat and mana otherwise, so
+    -- its colour belongs to the draw rather than to the frame.
+    if powerType and sb.fill then
+        local c = powerColour(powerType)
+        sb.fill:SetColorTexture(c[1], c[2], c[3], c[4] or 1)
+    end
     -- Alpha on the frame, not on the fill. SetStatusBarColor would
-    -- overwrite the colour Chrome registered and quietly drop the bar
-    -- back out of the theme, which is the bug this is fixing.
+    -- overwrite the texture we just set.
     sb:SetAlpha(alpha or 1)
 end
 
@@ -275,12 +299,12 @@ local function DrawBar(f)
     local mana, manaMax = UnitPower("player", POWER_MANA), UnitPowerMax("player", POWER_MANA)
 
     if powerType == POWER_RAGE then
-        setBar(f.priTrack, UnitPower("player", POWER_RAGE), UnitPowerMax("player", POWER_RAGE), 1)
-        setBar(f.manaTrack, mana, manaMax, 0.45)
+        setBar(f.priTrack, UnitPower("player", POWER_RAGE), UnitPowerMax("player", POWER_RAGE), 1, POWER_RAGE)
+        setBar(f.manaTrack, mana, manaMax, 0.45, POWER_MANA)
         f.manaTrack:Show()
     elseif powerType == POWER_ENERGY then
-        setBar(f.priTrack, UnitPower("player", POWER_ENERGY), UnitPowerMax("player", POWER_ENERGY), 1)
-        setBar(f.manaTrack, mana, manaMax, 0.45)
+        setBar(f.priTrack, UnitPower("player", POWER_ENERGY), UnitPowerMax("player", POWER_ENERGY), 1, POWER_ENERGY)
+        setBar(f.manaTrack, mana, manaMax, 0.45, POWER_MANA)
         f.manaTrack:Show()
     else
         local formIndex = GetShapeshiftForm()
@@ -289,7 +313,7 @@ local function DrawBar(f)
             local formName = GetShapeshiftFormInfo(formIndex)
             isMoonkin = (formName == "Moonkin Form")
         end
-        setBar(f.priTrack, mana, manaMax, isMoonkin and 1 or 0.55)
+        setBar(f.priTrack, mana, manaMax, isMoonkin and 1 or 0.55, POWER_MANA)
         f.manaTrack:Hide()
     end
 end
