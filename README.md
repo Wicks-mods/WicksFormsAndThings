@@ -2,7 +2,7 @@
 
 > Druid loadout kit for World of Warcraft: Forever. Smart travel form keybind with resource bar, talents, pre-pull checklist, racials.
 
-Part of the **[Wick suite](https://github.com/Wicksmods/WickSuite)**: precision addons built around a single fel-green-on-deep-purple aesthetic. Built on [WickCore](https://github.com/Wicksmods/WickCore). Wick's Travel Form grew up into this.
+Part of the **[Wick suite](https://github.com/Wicks-mods/WickSuite)**: precision addons built around a single fel-green-on-deep-purple aesthetic. Built on [WickCore](https://github.com/Wicks-mods/WickCore). Wick's Travel Form grew up into this.
 
 ## What it is
 
@@ -23,7 +23,7 @@ Part of the **[Wick suite](https://github.com/Wicksmods/WickSuite)**: precision 
 
 ## Install
 
-Requires **[WickCore](https://github.com/Wicksmods/WickCore)**. Extract both
+Requires **[WickCore](https://github.com/Wicks-mods/WickCore)**. Extract both
 folders into the Forever client's `Interface\AddOns\`.
 
 ## Usage
@@ -48,4 +48,4 @@ World of Warcraft: Forever, 1.60.x, Interface 16001. Requires WickCore.
 
 ## License
 
-MIT for code (see [LICENSE](LICENSE)). Brand chrome and the "Wick's" wordmark are trademarked, see [TRADEMARK.md](https://github.com/Wicksmods/WickSuite/blob/main/TRADEMARK.md). Racial data from [talentsforever.com](https://talentsforever.com) (CC BY 4.0) via WickCore.
+MIT for code (see [LICENSE](LICENSE)). Brand chrome and the "Wick's" wordmark are trademarked, see [TRADEMARK.md](https://github.com/Wicks-mods/WickSuite/blob/main/TRADEMARK.md). Racial data from [talentsforever.com](https://talentsforever.com) (CC BY 4.0) via WickCore.
